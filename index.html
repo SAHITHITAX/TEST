@@ -30,13 +30,14 @@
             <th>Mobile</th>
             <th>Work</th>
             <th>Actions</th>
+            <th>Folder</th>
         </tr>
     </table>
     
     <script>
         let editMode = false;
         let editId = null;
-        
+
         function submitForm() {
             const formData = {
                 id: editMode ? editId : null,
@@ -44,8 +45,8 @@
                 mobile: document.getElementById("mobile").value,
                 work: document.getElementById("work").value
             };
-            
-            fetch('https://script.google.com/macros/s/AKfycbwKoxeinG0HXSJQVaQ30N8MkQr3tXfurHhBhDedAvt_7500OqiNU4fCYqVsRsRV14YLUw/exec', {
+
+            fetch('https://script.google.com/macros/s/AKfycbyUG1htMwwl-GwcsVXqhkFZ-PSp7mNGOlVhQn63Y5DcOWp6sTHF1br3mFzyqbQA9X9A_Q/exec', {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: {
@@ -60,62 +61,78 @@
                 fetchData();
             }).catch(error => console.error("Error:", error));
         }
-        
 
-function fetchData() {
-    fetch('https://script.google.com/macros/s/AKfycbwKoxeinG0HXSJQVaQ30N8MkQr3tXfurHhBhDedAvt_7500OqiNU4fCYqVsRsRV14YLUw/exec')
-        .then(response => response.json())
-        .then(data => {
-            const table = document.getElementById("dataTable");
-            table.innerHTML = "<tr><th>ID</th><th>Name</th><th>Mobile</th><th>Work</th><th>Actions</th><th>Folder</th></tr>";
-            data.forEach((row) => {
-                const newRow = table.insertRow();
-                newRow.insertCell(0).innerText = row.id;
-                newRow.insertCell(1).innerText = row.name;
-                newRow.insertCell(2).innerText = row.mobile;
-                newRow.insertCell(3).innerText = row.work;
-                const actionCell = newRow.insertCell(4);
+        function fetchData() {
+            fetch('https://script.google.com/macros/s/AKfycbyUG1htMwwl-GwcsVXqhkFZ-PSp7mNGOlVhQn63Y5DcOWp6sTHF1br3mFzyqbQA9X9A_Q/exec')
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById("dataTable");
+                    table.innerHTML = "<tr><th>ID</th><th>Name</th><th>Mobile</th><th>Work</th><th>Actions</th><th>Folder</th></tr>";
+                    data.forEach((row) => {
+                        const newRow = table.insertRow();
+                        newRow.insertCell(0).innerText = row.id;
+                        newRow.insertCell(1).innerText = row.name;
+                        newRow.insertCell(2).innerText = row.mobile;
+                        newRow.insertCell(3).innerText = row.work;
+                        const actionCell = newRow.insertCell(4);
 
-                // Edit Button
-                const editButton = document.createElement("button");
-                editButton.innerText = "Edit";
-                editButton.onclick = function() { editRow(row); };
-                actionCell.appendChild(editButton);
+                        // Edit Button
+                        const editButton = document.createElement("button");
+                        editButton.innerText = "Edit";
+                        editButton.onclick = function() { editRow(row); };
+                        actionCell.appendChild(editButton);
 
+                        // Delete Button
+                        const deleteButton = document.createElement("button");
+                        deleteButton.innerText = "Delete";
+                        deleteButton.onclick = function() { deleteRow(row.id); };
+                        actionCell.appendChild(deleteButton);
 
-                // Open Folder Button
-                const folderCell = newRow.insertCell(5);
-                if (row.folderId) {
-                    const openFolderButton = document.createElement("button");
-                    openFolderButton.innerText = "Open Folder";
-                    openFolderButton.onclick = function() { openFolder(row.folderId); };
-                    folderCell.appendChild(openFolderButton);
-                } else {
-                    folderCell.innerText = "No Folder";
-                }
-            });
-        })
-        .catch(error => console.error("Error fetching data:", error));
-}function createFolder(row) {
-    const folderData = {
-        name: row.name // Use the name from the row as the folder name
-    };
+                        // Open Folder Button
+                        const folderCell = newRow.insertCell(5);
+                        if (row.folderId) {
+                            const openFolderButton = document.createElement("button");
+                            openFolderButton.innerText = "Open Folder";
+                            openFolderButton.onclick = function() { openFolder(row.folderId); };
+                            folderCell.appendChild(openFolderButton);
+                        } else {
+                            folderCell.innerText = "No Folder";
+                        }
+                    });
+                })
+                .catch(error => console.error("Error fetching data:", error));
+        }
 
-    fetch('https://script.google.com/macros/s/AKfycbwKoxeinG0HXSJQVaQ30N8MkQr3tXfurHhBhDedAvt_7500OqiNU4fCYqVsRsRV14YLUw/exec', {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(folderData)
-    }).then(() => {
-        alert("Folder created successfully!");
-    }).catch(error => console.error("Error:", error));
+        function editRow(row) {
+            document.getElementById("editId").value = row.id;
+            document.getElementById("name").value = row.name;
+            document.getElementById("mobile").value = row.mobile;
+            document.getElementById("work").value = row.work;
+            editMode = true;
+            editId = row.id;
+        }
+
+       function deleteRow(id) {
+    if (confirm("Are you sure you want to delete this record?")) {
+        fetch('https://script.google.com/macros/s/AKfycbyUG1htMwwl-GwcsVXqhkFZ-PSp7mNGOlVhQn63Y5DcOWp6sTHF1br3mFzyqbQA9X9A_Q/exec', {
+            method: 'POST', // Use POST for Google Apps Script
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: id, action: 'delete' }) // Include an action parameter
+        }).then(() => {
+            alert("Record deleted successfully!");
+            fetchData(); // Refresh the table
+        }).catch(error => console.error("Error:", error));
+    }
 }
-function openFolder(folderId) {
-    const folderUrl = `https://drive.google.com/drive/folders/${folderId}`;
-    window.open(folderUrl, "_blank");
-}
+
+        function openFolder(folderId) {
+            const folderUrl = `https://drive.google.com/drive/folders/${folderId}`;
+            window.open(folderUrl, "_blank");
+        }
+
         window.onload = fetchData;
     </script>
 </body>
