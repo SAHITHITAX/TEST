@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Collection Form</title>
+</head>
+<body>
+    <h2>Data Collection Form</h2>
+    <form id="dataForm">
+        <input type="hidden" id="editId"> 
+        
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+        
+        <label for="mobile">Mobile:</label>
+        <input type="tel" id="mobile" name="mobile" required><br><br>
+        
+        <label for="work">Work:</label>
+        <input type="text" id="work" name="work" required><br><br>
+        
+        <button type="button" onclick="submitForm()">Submit</button>
+    </form>
+    
+    <h2>Submitted Data</h2>
+    <table border="1" id="dataTable">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Mobile</th>
+            <th>Work</th>
+            <th>Actions</th>
+        </tr>
+    </table>
+    
+    <script>
+        let editMode = false;
+        let editId = null;
+        
+        function submitForm() {
+            const formData = {
+                id: editMode ? editId : null,
+                name: document.getElementById("name").value,
+                mobile: document.getElementById("mobile").value,
+                work: document.getElementById("work").value
+            };
+            
+            fetch('https://script.google.com/macros/s/AKfycbwKoxeinG0HXSJQVaQ30N8MkQr3tXfurHhBhDedAvt_7500OqiNU4fCYqVsRsRV14YLUw/exec', {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            }).then(() => {
+                alert(editMode ? "Data updated successfully!" : "Data submitted successfully!");
+                document.getElementById("dataForm").reset();
+                editMode = false;
+                editId = null;
+                fetchData();
+            }).catch(error => console.error("Error:", error));
+        }
+        
+
+function fetchData() {
+    fetch('https://script.google.com/macros/s/AKfycbwKoxeinG0HXSJQVaQ30N8MkQr3tXfurHhBhDedAvt_7500OqiNU4fCYqVsRsRV14YLUw/exec')
+        .then(response => response.json())
+        .then(data => {
+            const table = document.getElementById("dataTable");
+            table.innerHTML = "<tr><th>ID</th><th>Name</th><th>Mobile</th><th>Work</th><th>Actions</th><th>Folder</th></tr>";
+            data.forEach((row) => {
+                const newRow = table.insertRow();
+                newRow.insertCell(0).innerText = row.id;
+                newRow.insertCell(1).innerText = row.name;
+                newRow.insertCell(2).innerText = row.mobile;
+                newRow.insertCell(3).innerText = row.work;
+                const actionCell = newRow.insertCell(4);
+
+                // Edit Button
+                const editButton = document.createElement("button");
+                editButton.innerText = "Edit";
+                editButton.onclick = function() { editRow(row); };
+                actionCell.appendChild(editButton);
+
+
+                // Open Folder Button
+                const folderCell = newRow.insertCell(5);
+                if (row.folderId) {
+                    const openFolderButton = document.createElement("button");
+                    openFolderButton.innerText = "Open Folder";
+                    openFolderButton.onclick = function() { openFolder(row.folderId); };
+                    folderCell.appendChild(openFolderButton);
+                } else {
+                    folderCell.innerText = "No Folder";
+                }
+            });
+        })
+        .catch(error => console.error("Error fetching data:", error));
+}function createFolder(row) {
+    const folderData = {
+        name: row.name // Use the name from the row as the folder name
+    };
+
+    fetch('https://script.google.com/macros/s/AKfycbwKoxeinG0HXSJQVaQ30N8MkQr3tXfurHhBhDedAvt_7500OqiNU4fCYqVsRsRV14YLUw/exec', {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(folderData)
+    }).then(() => {
+        alert("Folder created successfully!");
+    }).catch(error => console.error("Error:", error));
+}
+function openFolder(folderId) {
+    const folderUrl = `https://drive.google.com/drive/folders/${folderId}`;
+    window.open(folderUrl, "_blank");
+}
+        window.onload = fetchData;
+    </script>
+</body>
+</html>
